@@ -42,32 +42,39 @@ app.post("/send-email", function (req, res) {
    `;
 
       let transporter = nodemailer.createTransport({
-         service: "Hotmail",
+         // service: "Hotmail",
          // host: "smtp.office365.com",
          // port: 587,
          // secure: false,
-         auth: {
-            user: process.env.AUTH_EMAIL,
-            pass: process.env.AUTH_PASS
-         },
+         // auth: {
+         //    user: process.env.AUTH_EMAIL,
+         //    pass: process.env.AUTH_PASS
+         // },
          // tls: {
          //   ciphers:'SSLv3',
          //   rejectUnauthorized: false,
          // }
+         host: process.env.SMTP_HOST,
+         port: process.env.SMTP_PORT,
+         secure: false,
+         auth: {
+            user: process.env.SMTP_AUTH_EMAIL,
+            pass: process.env.SMTP_AUTH_PASS
+         },
       });
 
       // Local verifying (can be deleted)
-      transporter.verify(function (error, success) {
-         if (error) {
-            console.log("Verify error:",error);
-         } else {
-            console.log("Server is ready to take our messages");
-         }
-      });
+      // transporter.verify(function (error, success) {
+      //    if (error) {
+      //       console.log("Verify error:",error);
+      //    } else {
+      //       console.log("Server is ready to take our messages");
+      //    }
+      // });
 
       let mailOptions = {
-         from: emailAddress,
-         to: "martinzz.info@gmail.com",
+         from: process.env.SMTP_FROM_EMAIL,
+         to: process.env.SMTP_TO_EMAIL,
          subject: subject,
          html: output
       };
