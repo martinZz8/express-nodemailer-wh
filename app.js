@@ -27,12 +27,12 @@ app.post("/send-email", function (req, res) {
    `;
 
    let transporter = nodemailer.createTransport({
-      host: "smtp.elasticemail.com",
-      port: 2525,
+      host: "hotmail",
+      port: 25,
       secure: false,
       auth: {
-         user: "martinzz.info@gmail.com",
-         pass: "36255C8AC7FC5D336C70A2FC3BB580713963"
+         user: process.env.AUTH_EMAIL,
+         pass: process.env.AUTH_PASS
       }
    });
 
