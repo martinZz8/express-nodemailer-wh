@@ -22,7 +22,7 @@ app.post("/send-email", function (req, res) {
    let {firstName, lastName, emailAddress, phoneNumber, subject, message} = req.body;
 
    // Check for the required values
-   if (firstName.length === 0 || lastName.length === 0 || !emailRgx.test(emailAddress) || subject.length === 0 || message.length === 0) {
+   if (firstName.length === 0 || !emailRgx.test(emailAddress) || subject.length === 0 || message.length === 0) {
       res.status(400).json({
          message: "Wrong body parameters",
          code: 400
