@@ -18,17 +18,58 @@ app.use(cors());
 const emailRgx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 // define the first route
+// mandatory: subject, message
+// can be omitted: firstName, lastName
+// require of proper values: emailAddress, phoneNumber
 app.post("/send-email", function (req, res) {
    let {firstName, lastName, emailAddress, phoneNumber, subject, message} = req.body;
+   let canProceed = true;
+   let proceedErrorItems = [];
 
    // Check for the required values
-   if (firstName.length === 0 || !emailRgx.test(emailAddress) || subject.length === 0 || message.length === 0) {
-      res.status(400).json({
-         message: "Wrong body parameters",
-         code: 400
-      });
+   if (subject.length === 0) {
+      canProceed = false;
+      proceedErrorItems.push("subject");
    }
-   else {
+
+   if (message.length === 0) {
+      canProceed = false;
+      proceedErrorItems.push("message");
+   }
+
+   // Check for the proper emailAddress, if it's given
+   if (emailAddress.length > 0) {
+      if (!emailRgx.test(emailAddress)) {
+         canProceed = false;
+         proceedErrorItems.push("emailAddress");
+      }
+   }
+
+   // Check for the proper phoneNumber, if it's given (can't contain letters)
+   if (phoneNumber.length > 0) {
+      if (/[a-zA-Z]/.test(phoneNumber)) {
+         canProceed = false;
+         proceedErrorItems.push("phoneNumber");
+      }
+   }
+
+   // Check if phoneNumber or emailAddress is given (one of them has to be given) (we use here the 'proceedErrorItems' array)
+   if (
+      (phoneNumber.length === 0 && emailAddress.length === 0)
+      || proceedErrorItems.includes("phoneNumber")
+      || proceedErrorItems.includes("emailAddress")
+   ) {
+      canProceed = false;
+      proceedErrorItems.push("phoneNumber and emailAddress are blank or invalid - one of them has to be given properly");
+   }
+
+   // Check if we can send email
+   if (canProceed) {
+      res.status(200).json({
+         message: "Message send successfully",
+         code: 200
+      });
+
       // Prepare nodemailer send
       const output = `
       <p>
@@ -74,7 +115,7 @@ app.post("/send-email", function (req, res) {
 
       let mailOptions = {
          from: process.env.SMTP_FROM_EMAIL,
-         to: process.env.SMTP_TO_EMAIL,
+         to: "martinzz.info@gmail.com",
          subject: subject,
          html: output
       };
@@ -83,7 +124,7 @@ app.post("/send-email", function (req, res) {
          if (error) {
             console.log("Error occurred!:", error);
             res.status(400).json({
-               message: "Error occurred",
+               message: "Error occurred during sending email to SMTP",
                code: 400
             });
          }
@@ -97,6 +138,12 @@ app.post("/send-email", function (req, res) {
          }
 
          //console.log("info:", info);
+      });
+   }
+   else {
+      res.status(400).json({
+         message: "Wrong body parameters: " + proceedErrorItems.join(", "),
+         code: 400
       });
    }
 });
