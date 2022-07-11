@@ -115,7 +115,7 @@ app.post("/send-email", function (req, res) {
 
       let mailOptions = {
          from: process.env.SMTP_FROM_EMAIL,
-         to: "martinzz.info@gmail.com",
+         to: process.env.SMTP_TO_EMAIL,
          subject: subject,
          html: output
       };
