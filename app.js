@@ -1,28 +1,40 @@
-// create an express app
+// require packages
 const express = require("express");
-const bodyParser = require("body-parser");
+//const bodyParser = require("body-parser");
+const multer = require('multer');
 const cors = require('cors');
 const nodemailer = require("nodemailer");
 require('dotenv').config();
 
+// create an express object
 const app = express();
+// create multer object (for file processing)
+const upload = multer();
 
 // use the express-static middleware
 app.use(express.static("public"));
 
-// BodyParser middleware
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+// BodyParser middleware (deprecated - for json objects)
+//app.use(bodyParser.urlencoded({extended: false}));
+//app.use(bodyParser.json());
+
+// Use cors politics
 app.use(cors());
 
 const emailRgx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-// define the first route
-// mandatory: subject, message
-// can be omitted: firstName, lastName
-// require of proper values: emailAddress, phoneNumber
-app.post("/send-email", function (req, res) {
+// Define the first route
+// 1) mandatory: subject, message
+// 2) can be omitted: firstName, lastName
+// 3) require of proper values: emailAddress, phoneNumber
+app.post("/send-email", upload.array("files"), function (req, res) {
+   // req.files is array of uploaded files
+   // req.body will contain the text fields, if there were any
    let {firstName, lastName, emailAddress, phoneNumber, subject, message} = req.body;
+
+   console.log("req.body:", req.body);
+   console.log("req.files:", req.files);
+
    let canProceed = true;
    let proceedErrorItems = [];
 
@@ -65,11 +77,6 @@ app.post("/send-email", function (req, res) {
 
    // Check if we can send email
    if (canProceed) {
-      res.status(200).json({
-         message: "Message send successfully",
-         code: 200
-      });
-
       // Prepare nodemailer send
       const output = `
       <p>
@@ -82,6 +89,7 @@ app.post("/send-email", function (req, res) {
       <p><b>Wiadomość: </b>${message}</p>
    `;
 
+      // Create transporter
       let transporter = nodemailer.createTransport({
          // service: "Hotmail",
          // host: "smtp.office365.com",
@@ -104,7 +112,7 @@ app.post("/send-email", function (req, res) {
          },
       });
 
-      // Local verifying (can be deleted)
+      //Local verifying (can be omitted)
       // transporter.verify(function (error, success) {
       //    if (error) {
       //       console.log("Verify error:",error);
@@ -113,13 +121,19 @@ app.post("/send-email", function (req, res) {
       //    }
       // });
 
+      // Prepare mail options
       let mailOptions = {
          from: process.env.SMTP_FROM_EMAIL,
          to: process.env.SMTP_TO_EMAIL,
          subject: subject,
-         html: output
+         html: output,
+         attachments: req.files.map(item => ({
+            filename: item.originalname,
+            content: Buffer.from(item.buffer, "utf8") //'new Buffer(buf, encoding)' is deprecated in this node version
+         }))
       };
 
+      // Send email
       transporter.sendMail(mailOptions, (error, info) => {
          if (error) {
             console.log("Error occurred!:", error);
@@ -148,6 +162,6 @@ app.post("/send-email", function (req, res) {
    }
 });
 
-// start the server listening for requests
+// Start the server listening for requests
 app.listen(process.env.PORT || 3001, // or just same 3001
    () => console.log("Server is running..."));
