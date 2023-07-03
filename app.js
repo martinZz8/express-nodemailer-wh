@@ -6,12 +6,13 @@ const cors = require('cors');
 const nodemailer = require("nodemailer");
 require('dotenv').config();
 
-// create an express object
+// Create an express object
 const app = express();
-// create multer object (for file processing)
+
+// Create multer object (for file processing)
 const upload = multer();
 
-// use the express-static middleware
+// Use the express-static middleware
 app.use(express.static("public"));
 
 // BodyParser middleware (deprecated - for json objects)
@@ -21,19 +22,23 @@ app.use(express.static("public"));
 // Use cors politics
 app.use(cors());
 
-const emailRgx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+// Import emailRgx
+const {emailRgx} = require("./data/emailRgx");
+
+// Import functions
+const {getStrOrDash} = require("./functions/getStrOrDash");
 
 // Define the first route
 // 1) mandatory: subject, message
 // 2) can be omitted: firstName, lastName
-// 3) require of proper values: emailAddress, phoneNumber
+// 3) require one proper value of: emailAddress, phoneNumber
 app.post("/send-email", upload.array("files"), function (req, res) {
    // req.files is array of uploaded files
    // req.body will contain the text fields, if there were any
    let {firstName, lastName, emailAddress, phoneNumber, subject, message} = req.body;
 
-   console.log("req.body:", req.body);
-   console.log("req.files:", req.files);
+   //console.log("req.body:", req.body);
+   //console.log("req.files:", req.files);
 
    let canProceed = true;
    let proceedErrorItems = [];
@@ -79,13 +84,15 @@ app.post("/send-email", upload.array("files"), function (req, res) {
    if (canProceed) {
       // Prepare nodemailer send
       const output = `
-      <p>
-         <b>Od: </b>${firstName} ${lastName}
-      </p>
-      <p><b>Email: </b>${emailAddress}</p>
-      <p><b>Telefon: </b>${phoneNumber.length > 0 ? phoneNumber : "-"}</p>
-      <p><b>Temat: </b>${subject}</p>
+      <p><b>-- Mail od strony www biura rachunkowego Wiesław Harbuz --</b></p>
       <br/>
+      <p><b>Dane autora: </b></p>
+      <p><b>Imię: </b>${getStrOrDash(firstName)}</p>
+      <p><b>Nazwisko: </b>${getStrOrDash(lastName)}</p>
+      <p><b>Email: </b>${getStrOrDash(emailAddress)}</p>
+      <p><b>Telefon: </b>${getStrOrDash(phoneNumber)}</p>
+      <br/>
+      <p><b>Temat: </b>${subject}</p>
       <p><b>Wiadomość: </b>${message}</p>
    `;
 
