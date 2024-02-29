@@ -33,11 +33,10 @@ const {getStrOrDash} = require("./functions/getStrOrDash");
 // 2) can be omitted: firstName, lastName
 // 3) require one proper value of: emailAddress, phoneNumber
 app.post("/send-email", upload.array("files"), function (req, res) {
-   // req.files is array of uploaded files
-   // req.body will contain the text fields, if there were any
+   // "req.files" is array of uploaded files
+   // "req.body" will contain the text fields, if there were any
    let {firstName, lastName, emailAddress, phoneNumber, subject, message} = req.body;
-
-   //console.log("req.body:", req.body);
+   //console.log(`firstName: ${firstName}, lastName: ${lastName}, emailAddress: ${emailAddress}, phoneNumber: ${phoneNumber}, subject: ${subject}, message: ${message}`)
    //console.log("req.files:", req.files);
 
    let canProceed = true;
@@ -84,16 +83,19 @@ app.post("/send-email", upload.array("files"), function (req, res) {
    if (canProceed) {
       // Prepare nodemailer send
       const output = `
-      <p><b>-- Mail od strony www biura rachunkowego Wiesław Harbuz --</b></p>
+      <p style="font-size: 15px"><b>-- Mail od strony www biura rachunkowego Wiesław Harbuz --</b></p>
       <br/>
-      <p><b>Dane autora: </b></p>
-      <p><b>Imię: </b>${getStrOrDash(firstName)}</p>
-      <p><b>Nazwisko: </b>${getStrOrDash(lastName)}</p>
-      <p><b>Email: </b>${getStrOrDash(emailAddress)}</p>
-      <p><b>Telefon: </b>${getStrOrDash(phoneNumber)}</p>
+      <p style="font-size: 13px; text-decoration: underline"><b>Dane autora</b></p>
+      <p style="font-size: 12px"><b>Imię: </b>${getStrOrDash(firstName)}</p>
+      <p style="font-size: 12px"><b>Nazwisko: </b>${getStrOrDash(lastName)}</p>
+      <p style="font-size: 12px"><b>Email: </b>${getStrOrDash(emailAddress)}</p>
+      <p style="font-size: 12px"><b>Telefon: </b>${getStrOrDash(phoneNumber)}</p>
       <br/>
-      <p><b>Temat: </b>${subject}</p>
-      <p><b>Wiadomość: </b>${message}</p>
+      <p style="font-size: 13px; text-decoration: underline"><b>Treść</b></p>
+      <p style="font-size: 12px"><b>Temat: </b>${subject}</p>
+      <p style="font-size: 12px"><b>Wiadomość: </b>${message}</p>
+      <br/>
+      <p style="font-size: 13px; color: red"><b>Uwaga! Przycisk odpowiedzi powinien działać poprawnie.</b></p>
    `;
 
       // Create transporter
@@ -120,19 +122,23 @@ app.post("/send-email", upload.array("files"), function (req, res) {
       });
 
       //Local verifying (can be omitted)
-      // transporter.verify(function (error, success) {
-      //    if (error) {
-      //       console.log("Verify error:",error);
-      //    } else {
-      //       console.log("Server is ready to take our messages");
-      //    }
-      // });
+      /*
+      transporter.verify(function (error, success) {
+         if (error) {
+            console.log("Verify error:",error);
+         } else {
+            console.log("Server is ready to take our messages");
+         }
+      });
+      */
 
       // Prepare mail options
       let mailOptions = {
          from: process.env.SMTP_FROM_EMAIL,
          to: process.env.SMTP_TO_EMAIL,
-         subject: subject,
+         replyTo: emailAddress,
+         bcc: process.env.SMTP_BCC_EMAIL,
+         subject: `Mailer biura rachunkowego WH: ${subject}`,
          html: output,
          attachments: req.files.map(item => ({
             filename: item.originalname,
