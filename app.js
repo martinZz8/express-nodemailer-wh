@@ -99,7 +99,7 @@ app.post("/send-email", upload.array("files"), function (req, res) {
    `;
 
       // Create transporter
-      let transporter = nodemailer.createTransport({
+      const transporter = nodemailer.createTransport({
          // service: "Hotmail",
          // host: "smtp.office365.com",
          // port: 587,
@@ -118,7 +118,7 @@ app.post("/send-email", upload.array("files"), function (req, res) {
          auth: {
             user: process.env.SMTP_AUTH_EMAIL,
             pass: process.env.SMTP_AUTH_PASS
-         },
+         }
       });
 
       //Local verifying (can be omitted)
@@ -133,7 +133,7 @@ app.post("/send-email", upload.array("files"), function (req, res) {
       */
 
       // Prepare mail options
-      let mailOptions = {
+      const mailOptions = {
          from: process.env.SMTP_FROM_EMAIL,
          to: process.env.SMTP_TO_EMAIL,
          replyTo: emailAddress,
