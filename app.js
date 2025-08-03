@@ -157,7 +157,7 @@ app.post("/send-email", upload.array("files"), function (req, res) {
          }
          else {
             // if we don't have error, it's send successfully
-            console.log("Message send successfully!");
+            console.log("Message sent successfully!");
             res.status(200).json({
                message: "Message send successfully",
                code: 200
